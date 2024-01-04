@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"runtime"
+	"sync"
 )
 
 func main() {
@@ -11,11 +12,42 @@ func main() {
 	resSlices := createSlices(nElements, nGoroutines)
 
 	fmt.Println(spreader(resSlices))
+	fmt.Println(spreader3(resSlices))
+}
+
+func spreader3(slices [][]int) int {
+	var wg sync.WaitGroup
+	ch := make(chan int)
+	slice := make([]int, 0)
+
+	for i := 0; i < len(slices); i++ {
+		slice = slices[i]
+		wg.Add(1)
+
+		go func(slice []int, wg *sync.WaitGroup) {
+			sum := 0
+			for _, v := range slice {
+				sum += v
+			}
+			ch <- sum
+			wg.Done()
+		}(slice, &wg)
+	}
+
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+
+	res := 0
+	for v := range ch {
+		res += v
+	}
+	return res
 }
 
 func calc(slice []int, ch chan int) {
 	defer close(ch)
-
 	sum := 0
 	for _, v := range slice {
 		sum += v
@@ -25,6 +57,7 @@ func calc(slice []int, ch chan int) {
 
 func spreader(slices [][]int) int {
 	sliceChan := make([]chan int, len(slices))
+
 	for i := range sliceChan {
 		sliceChan[i] = make(chan int)
 	}
