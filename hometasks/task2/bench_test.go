@@ -6,12 +6,14 @@ import (
 )
 
 func BenchmarkBatchChan(b *testing.B) {
+	b.ReportAllocs()
+
 	timeout := time.Second
 	limit := 5
-	someCh := generateData()
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		someCh := generateData()
 		BatchChan(someCh, timeout, limit)
 	}
 }

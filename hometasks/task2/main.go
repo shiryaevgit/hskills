@@ -10,12 +10,12 @@ func main() {
 
 	go func() { // пишем в канал
 		defer close(someCh)
-		for i := 1; i < 50; i++ {
+		for i := 0; i < 5; i++ {
 			someCh <- i
 		}
 	}()
 
-	for v := range BatchChan(someCh, time.Second, 5) {
+	for v := range BatchChan(someCh, time.Second, 3) {
 		log.Println(v)
 	}
 }
@@ -23,31 +23,29 @@ func main() {
 func BatchChan(ch chan int, timeout time.Duration, limit int) chan []int {
 	resch := make(chan []int)
 	go func() {
-		// читать пачками
-		// Limit - максимальный размер batch, по сколько считываем из канала за раз
-		//Timeout - максимальное время ожидание непустого batch. Если не будет нового значения и таймер завершился, завершаем
-		defer close(resch)
-		batch := make([]int, 0)
-		timer := time.NewTimer(timeout)
 
+		defer close(resch)
+		batch := make([]int, 0, limit) // инициализацию батча с указанием capacity батча равным limit
+		//timer := time.NewTimer(timeout)
+		tiker := time.NewTicker(timeout)
 		for {
 			select {
-			case val, ok := <-ch: // если есть данные, то
-				if !ok { // канал закрыт, проверяем есть ли данные, если есть добавляем в resch
+			case val, ok := <-ch:
+				if !ok {
 					if len(batch) > 0 {
 						resch <- batch
 					}
-					return // выходим
+					return
 				}
 
-				batch = append(batch, val) // если канал не закрыт, добавляем в batch
-				if len(batch) == limit {   // проверка на лимит
+				batch = append(batch, val)
+				if len(batch) == limit {
 					resch <- batch
-					batch = nil          // обнулили
-					timer.Reset(timeout) // таймер скинули
+					batch = nil
+					tiker.Reset(timeout)
 				}
 
-			case <-timer.C: // если время ожидания вышло то, добрасываем в resch то что осталось и выходим
+			case <-tiker.C:
 				if len(batch) > 0 {
 					resch <- batch
 				}

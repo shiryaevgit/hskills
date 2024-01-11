@@ -9,7 +9,7 @@ import (
 func worker(id int, jobs <-chan int, results chan<- int, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for j := range jobs {
-		fmt.Println("worker", id, "processing job", j)
+		fmt.Printf("worker %v, processing job %v\n", id, j)
 		time.Sleep(time.Second)
 		results <- j * 2
 	}
