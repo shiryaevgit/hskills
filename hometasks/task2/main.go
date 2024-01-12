@@ -41,7 +41,8 @@ func BatchChan(ch chan int, timeout time.Duration, limit int) chan []int {
 				batch = append(batch, val)
 				if len(batch) == limit {
 					resch <- batch
-					batch = nil
+					//batch=nil уточнить
+					batch = make([]int, 0, limit)
 					tiker.Reset(timeout)
 				}
 
@@ -49,7 +50,7 @@ func BatchChan(ch chan int, timeout time.Duration, limit int) chan []int {
 				if len(batch) > 0 {
 					resch <- batch
 				}
-				return
+				//return убираем, так как <-tiker.C, как ограничитель ожидания, а не сигнал для выхода из функции
 			}
 		}
 
