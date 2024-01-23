@@ -21,8 +21,8 @@ func main() {
 	}
 	// Создаем обработчики для конкретных путей:
 	mux.HandleFunc("/healthcheck", handlers.HandleGetHealthcheck) // передаем в мультиплексор путь и функции для обработки
-	mux.HandleFunc("/redirect", handlers.HandleGetRedirect)
 	mux.HandleFunc("/values/", handlers.HandlePost)
+	mux.HandleFunc("/redirect", handlers.HandleGetRedirect)
 	//mux.HandleFunc("/values/", handlers.HandleGet)
 
 	err = srv.Run(port, mux)
