@@ -74,12 +74,14 @@ func HandlePost(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("used handlePost")
 }
-func HandleGet(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		id := r.URL.Path[len("/values/"):]
 
-		//не понимаю как обратится к методам репозитория чтобы вызвать
-		//GetAllPosts и проверить есть ли в наличии
-
-	}
-}
+//func HandleGet(w http.ResponseWriter, r *http.Request) {
+//	//if r.Method == "GET" {
+//	//	//id := r.URL.Path[len("/values/"):]
+//	//
+//	//	//не понимаю как обратится к методам репозитория чтобы вызвать
+//	//	//GetAllPosts и проверить есть ли в наличии
+//	//
+//	//}
+//	//
+//}
