@@ -6,6 +6,7 @@ import (
 	serv "hskills_/hometasks/task3"
 	"hskills_/hometasks/task3/pkg/handlers"
 	"hskills_/hometasks/task3/pkg/repository"
+	"hskills_/hometasks/task3/pkg/service"
 	"log"
 	"net/http"
 )
@@ -15,15 +16,18 @@ func main() {
 	srv := new(serv.Server)
 	mux := http.NewServeMux() // Создаем новый мультиплексор - обработчик запросов/путей
 
-	_, err := repository.NewRepository("./db.json")
+	repo, err := repository.NewRepository("./db.json")
 	if err != nil {
 		fmt.Println("ошибка при создании репозитория")
 	}
+	metric := service.NewMetrics()
+	handler := handlers.NewHandler(repo, metric)
+
 	// Создаем обработчики для конкретных путей:
-	mux.HandleFunc("/healthcheck", handlers.HandleGetHealthcheck) // передаем в мультиплексор путь и функции для обработки
-	mux.HandleFunc("/values/", handlers.HandlePost)
-	mux.HandleFunc("/redirect", handlers.HandleGetRedirect)
-	//mux.HandleFunc("/values/", handlers.HandleGet)
+	mux.HandleFunc("/healthcheck", handler.HandleGetHealthcheck) // передаем в мультиплексор путь и функции для обработки
+	mux.HandleFunc("/redirect", handler.HandleGetRedirect)
+	mux.HandleFunc("/values/{id}", handler.HandlePost)
+	mux.HandleFunc("/values/", handler.HandleGet)
 
 	err = srv.Run(port, mux)
 	if err != nil {

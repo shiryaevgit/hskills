@@ -6,7 +6,13 @@ import (
 	"runtime"
 )
 
-func GetCPULoad() (float64, error) {
+type Metrics struct{}
+
+func NewMetrics() *Metrics {
+	return &Metrics{}
+}
+
+func (m *Metrics) GetCPULoad() (float64, error) {
 	percentages, err := cpu.Percent(0, false)
 	if err != nil {
 		return 0, err
@@ -18,6 +24,6 @@ func GetCPULoad() (float64, error) {
 
 	return 0, fmt.Errorf("сould not get CPU load information")
 }
-func GetThreadCount() int {
+func (m *Metrics) GetThreadCount() int {
 	return runtime.NumCPU()
 }
