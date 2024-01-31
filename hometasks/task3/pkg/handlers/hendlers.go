@@ -3,13 +3,26 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"hskills_/hometasks/task3/pkg/models"
-	"hskills_/hometasks/task3/pkg/repository"
-	"hskills_/hometasks/task3/pkg/service"
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"hskills_/hometasks/task3/pkg/models"
+	"hskills_/hometasks/task3/pkg/repository"
+	"hskills_/hometasks/task3/pkg/service"
 )
+
+/*
+	Место применения (Handler)
+*/
+
+/*  Пример интерфейса репозитория.
+Заполняем только методы которые нужны в сервисе
+
+type Repository interface {
+	CreatePost(newPost models.Post) error
+}
+*/
 
 type Handler struct {
 	repo    *repository.Repository
@@ -23,6 +36,11 @@ func (h *Handler) HandleGetHealthcheck(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		load, err := h.metrics.GetCPULoad()
 		if err != nil {
+			// Ошибка не обработана (сделать log + http.Error)
+			/*
+				Ответ пользователю: { "code": 500, "status": "internal error" }
+				Лог: детальный вывод информации. Ошибки прокидываем наверх, логируем
+			*/
 			return
 		}
 		metrics := models.HostMetric{
@@ -67,7 +85,9 @@ func (h *Handler) HandlePost(w http.ResponseWriter, r *http.Request) {
 
 		idInt, err := strconv.Atoi(id)
 		if err != nil {
-			http.Error(w, "invalid ID", 400)
+			// Не забываем вернуть ошибку пользователю
+			// Если не вернуть - пользователь увидит пустой ответ
+			http.Error(w, "invalid ID", http.StatusBadRequest)
 			return
 		}
 		newPost.ID = idInt

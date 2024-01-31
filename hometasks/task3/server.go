@@ -2,6 +2,7 @@ package serv
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"time"
 )
@@ -10,8 +11,7 @@ type Server struct {
 	httpServer *http.Server
 }
 
-func (s *Server) Run(port string, mux *http.ServeMux) error {
-
+func (s *Server) Run(ctx context.Context, port string, mux *http.ServeMux) error {
 	s.httpServer = &http.Server{
 		Addr:           ":" + port,
 		Handler:        mux,
@@ -19,6 +19,23 @@ func (s *Server) Run(port string, mux *http.ServeMux) error {
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 	}
+
+	// *shadowing (a = 0, a = 1)
+	// *ctx
+	a := 0
+	go func() {
+		<-ctx.Done()
+
+		a := 1
+		log.Println(a) // 1
+
+		ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
+		s.httpServer.Shutdown(ctx)
+		// err process
+	}()
+
+	log.Println(a) // 0
+
 	return s.httpServer.ListenAndServe()
 }
 

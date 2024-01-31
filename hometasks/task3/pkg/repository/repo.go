@@ -3,11 +3,16 @@ package repository
 import (
 	"encoding/json"
 	"fmt"
-	"hskills_/hometasks/task3/pkg/models"
 	"io"
 	"os"
 	"sync"
+
+	"hskills_/hometasks/task3/pkg/models"
 )
+
+/*
+	Место реализации
+*/
 
 type Repository struct {
 	file *os.File
@@ -22,7 +27,7 @@ func NewRepository(name string) (*Repository, error) {
 
 	createFile, err := os.Create(name)
 	if err != nil {
-		return nil, fmt.Errorf("error create database: %w", err)
+		return nil, fmt.Errorf("NewRepository: create database: %w", err)
 	}
 	return &Repository{file: createFile}, nil
 }
@@ -32,7 +37,14 @@ func (r *Repository) CreatePost(newPost models.Post) error {
 	defer r.mu.Unlock()
 	posts, err := r.GetAllPosts()
 	if err != nil {
-		return fmt.Errorf("error GetAllPosts %w", err)
+		/*
+			Используем имя функции в врапе ошибки
+			Примеры:
+			- return fmt.Errorf("CreatePost: %w, err) // здесь указал просто функцию в которой врапаю ошибку
+			- return fmt.Errorf("CreatePost: GetAllPosts(): %w, err) // здесь дополнительно указал функцию которая вызывалась
+			- return fmt.Errorf("CreatePost: GetAllPosts(): posts: %v %w, posts, err) // здесь добавил список полученных постов в ошибку для дебага
+		*/
+		return fmt.Errorf("CreatePost: %w", err)
 	}
 
 	for _, post := range posts {
