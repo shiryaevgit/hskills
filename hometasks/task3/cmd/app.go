@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	_ "github.com/lib/pq"
 	serv "hskills_/hometasks/task3"
 	"hskills_/hometasks/task3/pkg/handlers"
@@ -18,7 +17,7 @@ func main() {
 
 	repo, err := repository.NewRepository("./db.json")
 	if err != nil {
-		fmt.Println("ошибка при создании репозитория")
+		log.Fatalf("NewRepository: %v", err)
 	}
 	metric := service.NewMetrics()
 	handler := handlers.NewHandler(repo, metric)
@@ -31,9 +30,9 @@ func main() {
 
 	err = srv.Run(port, mux)
 	if err != nil {
-		fmt.Println("Error run server:", err)
+		log.Fatalf("Run:%v", err)
+		//fmt.Println("Error run server:", err)
 	} else {
 		log.Printf("Server is running on http://127.0.0.1%s\n", port)
 	}
-
 }
