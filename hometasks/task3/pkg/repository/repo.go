@@ -37,13 +37,6 @@ func (r *Repository) CreatePost(newPost models.Post) error {
 	defer r.mu.Unlock()
 	posts, err := r.GetAllPosts()
 	if err != nil {
-		/*
-			Используем имя функции в врапе ошибки
-			Примеры:
-			- return fmt.Errorf("CreatePost: %w, err) // здесь указал просто функцию в которой врапаю ошибку
-			- return fmt.Errorf("CreatePost: GetAllPosts(): %w, err) // здесь дополнительно указал функцию которая вызывалась
-			- return fmt.Errorf("CreatePost: GetAllPosts(): posts: %v %w, posts, err) // здесь добавил список полученных постов в ошибку для дебага
-		*/
 		return fmt.Errorf("CreatePost: %w", err)
 	}
 
@@ -58,7 +51,7 @@ func (r *Repository) CreatePost(newPost models.Post) error {
 
 	err = os.WriteFile("db.json", jsonData, 0644)
 	if err != nil {
-		return fmt.Errorf("error writing to file: %w", err)
+		return fmt.Errorf("CreatePost: os.WriteFile() %w", err)
 	}
 	return nil
 }
@@ -66,7 +59,7 @@ func (r *Repository) CreatePost(newPost models.Post) error {
 func (r *Repository) GetPost(id int) (*models.Post, error) {
 	posts, err := r.GetAllPosts()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetPost: GetAllPosts() %v", err)
 	}
 	for _, post := range posts {
 		if post.ID == id {
@@ -84,20 +77,21 @@ func (r *Repository) GetAllPosts() ([]models.Post, error) {
 
 	_, err := r.file.Seek(0, io.SeekStart)
 	if err != nil {
-		return nil, fmt.Errorf("error seek%w", err)
+		return nil, fmt.Errorf("GetAllPosts: file.Seek() %w", err)
 	}
 
 	data, err := io.ReadAll(r.file)
 	if len(data) == 0 {
+		fmt.Println("post list is empty")
 		return posts, nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("error reading file: %w", err)
+		return nil, fmt.Errorf("GetAllPosts: io.ReadAll() %w", err)
 	}
 
 	err = json.Unmarshal(data, &posts)
 	if err != nil {
-		return nil, fmt.Errorf("error Unmarshal:%w", err)
+		return nil, fmt.Errorf("GetAllPosts: json.Unmarshal() %w", err)
 	}
 	return posts, nil
 }
