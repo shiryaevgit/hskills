@@ -2,8 +2,9 @@ package service
 
 import (
 	"fmt"
-	"github.com/shirou/gopsutil/cpu"
 	"runtime"
+
+	"github.com/shirou/gopsutil/cpu"
 )
 
 type Metrics struct{}
