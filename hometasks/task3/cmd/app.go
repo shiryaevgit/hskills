@@ -9,17 +9,11 @@ import (
 	"os/signal"
 
 	serv "hskills_/hometasks/task3"
+	"hskills_/hometasks/task3/config"
 	"hskills_/hometasks/task3/pkg/handlers"
 	"hskills_/hometasks/task3/pkg/repository"
 	"hskills_/hometasks/task3/pkg/service"
 )
-
-/*
-type Environment struct {
-	HTTPPort string
-	DatabaseFilepath string
-}
-*/
 
 /*
 Собрать приложение через комманду: (запускаю из папки task3)
@@ -30,22 +24,23 @@ go build -o app cmd/app.g
 */
 
 func main() {
-	port := "8080"
-	srv := new(serv.Server)
-	mux := http.NewServeMux() // Создаем новый мультиплексор - обработчик запросов/путей
-
-	repo, err := repository.NewRepository("./db.json")
+	env, err := config.LoadEnv()
 	if err != nil {
-		/*
-			Не принято (от слова совсем) читать значение из функции в случае если функция вернула ошибку
-		*/
-		log.Fatalln("ошибка при создании репозитория", err)
+		log.Fatalf("config.LoadEnv: %v", err)
+	}
+
+	port := env.HTTPPort
+	srv := new(serv.Server)
+	mux := http.NewServeMux()
+
+	repo, err := repository.NewRepository(env.DatabaseFilepath)
+	if err != nil {
+		log.Fatalf("newRepository: %v", err)
 	}
 	metric := service.NewMetrics()
 	handler := handlers.NewHandler(repo, metric)
 
-	// Создаем обработчики для конкретных путей:
-	mux.HandleFunc("/healthcheck", handler.HandleGetHealthcheck) // передаем в мультиплексор путь и функции для обработки
+	mux.HandleFunc("/healthcheck", handler.HandleGetHealthcheck)
 	mux.HandleFunc("/redirect", handler.HandleGetRedirect)
 	mux.HandleFunc("/values/{id}", handler.HandlePost)
 	mux.HandleFunc("/values/", handler.HandleGet)

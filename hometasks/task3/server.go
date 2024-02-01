@@ -2,7 +2,6 @@ package serv
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
 )
@@ -22,19 +21,19 @@ func (s *Server) Run(ctx context.Context, port string, mux *http.ServeMux) error
 
 	// *shadowing (a = 0, a = 1)
 	// *ctx
-	a := 0
-	go func() {
-		<-ctx.Done()
-
-		a := 1
-		log.Println(a) // 1
-
-		ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
-		s.httpServer.Shutdown(ctx)
-		// err process
-	}()
-
-	log.Println(a) // 0
+	//a := 0
+	//go func() {
+	//	<-ctx.Done()
+	//
+	//	a := 1
+	//	log.Println(a) // 1
+	//
+	//	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
+	//	s.httpServer.Shutdown(ctx)
+	//	// err process
+	//}()
+	//
+	//log.Println(a) // 0
 
 	return s.httpServer.ListenAndServe()
 }

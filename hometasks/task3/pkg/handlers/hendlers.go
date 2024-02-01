@@ -24,6 +24,11 @@ type Repository interface {
 }
 */
 
+type UserRepository interface {
+	CreatePost(newPost models.Post) error
+	GetPost(id int) (*models.Post, error)
+}
+
 type Handler struct {
 	repo    *repository.Repository
 	metrics *service.Metrics
@@ -78,15 +83,12 @@ func (h *Handler) HandleGetRedirect(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("used HandleGetRedirect")
 }
 func (h *Handler) HandlePost(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
+	if r.Method == http.MethodPost {
 		id := r.URL.Path[len("/values/"):]
-
 		newPost := new(models.Post)
 
 		idInt, err := strconv.Atoi(id)
 		if err != nil {
-			// Не забываем вернуть ошибку пользователю
-			// Если не вернуть - пользователь увидит пустой ответ
 			http.Error(w, "invalid ID", http.StatusBadRequest)
 			return
 		}
@@ -95,47 +97,43 @@ func (h *Handler) HandlePost(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		err = decoder.Decode(newPost)
 		if err != nil {
-			http.Error(w, "error decoding json", 400)
+			http.Error(w, "error decoding json", http.StatusBadRequest)
 			return
 		}
 
 		err = h.repo.CreatePost(*newPost)
 		if err != nil {
-			http.Error(w, err.Error(), 400)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 	}
-	fmt.Println("used handlePost")
+	fmt.Println("used Post")
 }
-
 func (h *Handler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		id := r.URL.Path[len("/values/"):]
 		idInt, err := strconv.Atoi(id)
 		if err != nil {
-			http.Error(w, "invalid ID", 400)
+			http.Error(w, "invalid ID", http.StatusBadRequest)
 			return
 		}
 
 		post, err := h.repo.GetPost(idInt)
 		if err != nil {
-			http.Error(w, err.Error(), 400)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		jsonData, err := json.Marshal(post.Elements)
 		if err != nil {
-			http.Error(w, err.Error(), 400)
-			return
+			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 
-		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		_, err = w.Write(jsonData)
 		if err != nil {
 			http.Error(w, "formation error json", http.StatusInternalServerError)
-			return
 		}
 	}
-
+	fmt.Println("used Get")
 }
