@@ -70,6 +70,7 @@ func (h *Handler) HandleGetHealthcheck(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("used handleGetHealthcheck")
 }
 func (h *Handler) HandleGetRedirect(w http.ResponseWriter, r *http.Request) {
+
 	if r.Method == http.MethodGet {
 		targetURL := r.URL.Query().Get("url") //
 
@@ -80,9 +81,11 @@ func (h *Handler) HandleGetRedirect(w http.ResponseWriter, r *http.Request) {
 		}
 		http.Redirect(w, r, validTargetURL.String(), http.StatusFound)
 	}
-	fmt.Println("used HandleGetRedirect")
+
 }
 func (h *Handler) HandlePost(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("used Post")
+
 	if r.Method == http.MethodPost {
 		id := r.URL.Path[len("/values/"):]
 		newPost := new(models.Post)
@@ -107,33 +110,33 @@ func (h *Handler) HandlePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	fmt.Println("used Post")
 }
 func (h *Handler) HandleGet(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		id := r.URL.Path[len("/values/"):]
+		idInt, err := strconv.Atoi(id)
+		if err != nil {
+			http.Error(w, "invalid ID", http.StatusBadRequest)
+			return
+		}
 
-	id := r.URL.Path[len("/values/"):]
-	idInt, err := strconv.Atoi(id)
-	if err != nil {
-		http.Error(w, "invalid ID", http.StatusBadRequest)
-		return
+		post, err := h.repo.GetPost(idInt)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		jsonData, err := json.Marshal(post.Elements)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_, err = w.Write(jsonData)
+		if err != nil {
+			http.Error(w, "formation error json", http.StatusInternalServerError)
+		}
+
+		fmt.Println("used Get")
 	}
-
-	post, err := h.repo.GetPost(idInt)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	jsonData, err := json.Marshal(post.Elements)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	_, err = w.Write(jsonData)
-	if err != nil {
-		http.Error(w, "formation error json", http.StatusInternalServerError)
-	}
-
-	fmt.Println("used Get")
 }

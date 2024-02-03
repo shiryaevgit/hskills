@@ -42,16 +42,16 @@ func main() {
 
 	mux.HandleFunc("/healthcheck", handler.HandleGetHealthcheck)
 	mux.HandleFunc("/redirect", handler.HandleGetRedirect)
-	//mux.HandleFunc("/values/{id}", handler.HandlePost)
-	//mux.HandleFunc("/values/", handler.HandleGet)
+	mux.HandleFunc("/values/{id}", handler.HandlePost)
+	mux.HandleFunc("/values/", handler.HandleGet)
 
-	mux.HandleFunc("/values/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			handler.HandlePost(w, r)
-		} else if r.Method == http.MethodGet {
-			handler.HandleGet(w, r)
-		}
-	})
+	//mux.HandleFunc("/values/", func(w http.ResponseWriter, r *http.Request) {
+	//	if r.Method == http.MethodPost {
+	//		handler.HandlePost(w, r)
+	//	} else if r.Method == http.MethodGet {
+	//		handler.HandleGet(w, r)
+	//	}
+	//})
 
 	// Здесь зарегистрировал контекст который завершится в случае получения сигнала от операционной системы
 	// Поэкспериментируй с ним и попробуй отправить разные сигналы процессу

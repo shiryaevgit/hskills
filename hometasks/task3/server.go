@@ -2,7 +2,7 @@ package serv
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -20,18 +20,15 @@ func (s *Server) Run(ctx context.Context, port string, mux *http.ServeMux) error
 		WriteTimeout:   10 * time.Second,
 	}
 
-	//*shadowing (a = 0, a = 1)
-	//*ctx
-
 	go func() {
 		<-ctx.Done()
 
-		a := 1
-		log.Println(a) // 1
-
 		ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
-		s.httpServer.Shutdown(ctx)
-		// err process
+		err := s.httpServer.Shutdown(ctx)
+		if err != nil {
+			_ = fmt.Errorf("s.httpServer.Shutdown(ctx):  %v", err)
+			return
+		}
 	}()
 
 	return s.httpServer.ListenAndServe()
