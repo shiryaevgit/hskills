@@ -17,27 +17,29 @@ import (
 type Repository struct {
 	file *os.File
 	mu   sync.Mutex
+	path string
 }
 
-func NewRepository(name string) (*Repository, error) {
-	openedFile, err := os.Open(name)
+func NewRepository(path string) (*Repository, error) {
+	openedFile, err := os.Open(path)
 	if err == nil {
-		return &Repository{file: openedFile}, nil
+		return &Repository{file: openedFile, path: path}, nil
 	}
 
-	createFile, err := os.Create(name)
+	createFile, err := os.Create(path)
 	if err != nil {
 		return nil, fmt.Errorf("NewRepository: create database: %w", err)
 	}
-	return &Repository{file: createFile}, nil
+	return &Repository{file: createFile, path: path}, nil
 }
 
 func (r *Repository) CreatePost(newPost models.Post) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
 	posts, err := r.GetAllPosts()
 	if err != nil {
-		return fmt.Errorf("CreatePost: %w", err)
+		return fmt.Errorf("CreatePost: %v", err)
 	}
 
 	for _, post := range posts {
@@ -48,10 +50,13 @@ func (r *Repository) CreatePost(newPost models.Post) error {
 
 	posts = append(posts, newPost)
 	jsonData, err := json.Marshal(posts)
-
-	err = os.WriteFile("db.json", jsonData, 0644)
 	if err != nil {
-		return fmt.Errorf("CreatePost: os.WriteFile() %w", err)
+		return fmt.Errorf("CreatePost: json.Marshal() %v", err)
+	}
+
+	err = os.WriteFile(r.path, jsonData, 0644)
+	if err != nil {
+		return fmt.Errorf("CreatePost: os.WriteFile() %v", err)
 	}
 	return nil
 }

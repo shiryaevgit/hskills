@@ -110,30 +110,30 @@ func (h *Handler) HandlePost(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("used Post")
 }
 func (h *Handler) HandleGet(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		id := r.URL.Path[len("/values/"):]
-		idInt, err := strconv.Atoi(id)
-		if err != nil {
-			http.Error(w, "invalid ID", http.StatusBadRequest)
-			return
-		}
 
-		post, err := h.repo.GetPost(idInt)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		jsonData, err := json.Marshal(post.Elements)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		_, err = w.Write(jsonData)
-		if err != nil {
-			http.Error(w, "formation error json", http.StatusInternalServerError)
-		}
+	id := r.URL.Path[len("/values/"):]
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, "invalid ID", http.StatusBadRequest)
+		return
 	}
+
+	post, err := h.repo.GetPost(idInt)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	jsonData, err := json.Marshal(post.Elements)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(jsonData)
+	if err != nil {
+		http.Error(w, "formation error json", http.StatusInternalServerError)
+	}
+
 	fmt.Println("used Get")
 }

@@ -46,9 +46,9 @@ func main() {
 	//mux.HandleFunc("/values/", handler.HandleGet)
 
 	mux.HandleFunc("/values/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "POST" {
+		if r.Method == http.MethodPost {
 			handler.HandlePost(w, r)
-		} else if r.Method == "GET" {
+		} else if r.Method == http.MethodGet {
 			handler.HandleGet(w, r)
 		}
 	})
