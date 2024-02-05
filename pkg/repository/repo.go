@@ -3,11 +3,10 @@ package repository
 import (
 	"encoding/json"
 	"fmt"
+	"hskills_/pkg/models"
 	"io"
 	"os"
 	"sync"
-
-	"hskills_/hometasks/task3/pkg/models"
 )
 
 /*
@@ -28,14 +27,14 @@ func NewRepository(path string) (*Repository, error) {
 
 	createFile, err := os.Create(path)
 	if err != nil {
-		return nil, fmt.Errorf("NewRepository: create database: %w", err)
+		return nil, fmt.Errorf("NewRepository: %w", err)
 	}
 	return &Repository{file: createFile, path: path}, nil
 }
 
 func (r *Repository) CreatePost(newPost models.Post) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	//r.mu.Lock()
+	//defer r.mu.Unlock()
 
 	posts, err := r.GetAllPosts()
 	if err != nil {
@@ -51,12 +50,12 @@ func (r *Repository) CreatePost(newPost models.Post) error {
 	posts = append(posts, newPost)
 	jsonData, err := json.Marshal(posts)
 	if err != nil {
-		return fmt.Errorf("CreatePost: json.Marshal() %v", err)
+		return fmt.Errorf("CreatePost: %v", err)
 	}
 
 	err = os.WriteFile(r.path, jsonData, 0644)
 	if err != nil {
-		return fmt.Errorf("CreatePost: os.WriteFile() %v", err)
+		return fmt.Errorf("CreatePost: %v", err)
 	}
 	return nil
 }
@@ -71,7 +70,7 @@ func (r *Repository) GetPost(id int) (*models.Post, error) {
 			return &post, nil
 		}
 	}
-	return nil, fmt.Errorf("there is no post with this id:%v", id)
+	return nil, fmt.Errorf("GetPost: there is no post with id: %v", id)
 }
 
 func (r *Repository) GetAllPosts() ([]models.Post, error) {
@@ -82,7 +81,7 @@ func (r *Repository) GetAllPosts() ([]models.Post, error) {
 
 	_, err := r.file.Seek(0, io.SeekStart)
 	if err != nil {
-		return nil, fmt.Errorf("GetAllPosts: file.Seek() %w", err)
+		return nil, fmt.Errorf("GetAllPosts: %w", err)
 	}
 
 	data, err := io.ReadAll(r.file)
@@ -91,12 +90,13 @@ func (r *Repository) GetAllPosts() ([]models.Post, error) {
 		return posts, nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("GetAllPosts: io.ReadAll() %w", err)
+		return nil, fmt.Errorf("GetAllPosts: %w", err)
 	}
 
 	err = json.Unmarshal(data, &posts)
 	if err != nil {
-		return nil, fmt.Errorf("GetAllPosts: json.Unmarshal() %w", err)
+		return nil, fmt.Errorf("GetAllPosts: %w", err)
 	}
+
 	return posts, nil
 }

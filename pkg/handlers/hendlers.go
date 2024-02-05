@@ -3,13 +3,13 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"hskills_/pkg/models"
+	"hskills_/pkg/repository"
+	"hskills_/pkg/service"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
-
-	"hskills_/hometasks/task3/pkg/models"
-	"hskills_/hometasks/task3/pkg/repository"
-	"hskills_/hometasks/task3/pkg/service"
 )
 
 /*
@@ -24,6 +24,7 @@ type Repository interface {
 }
 */
 
+// где его необходимо реализовывать/ использовать?
 type UserRepository interface {
 	CreatePost(newPost models.Post) error
 	GetPost(id int) (*models.Post, error)
@@ -32,21 +33,24 @@ type UserRepository interface {
 type Handler struct {
 	repo    *repository.Repository
 	metrics *service.Metrics
+	// UserRepository ?
 }
 
 func NewHandler(repo *repository.Repository, metrics *service.Metrics) *Handler {
 	return &Handler{repo: repo, metrics: metrics}
 }
+
 func (h *Handler) HandleGetHealthcheck(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	if r.Method == http.MethodGet {
 		load, err := h.metrics.GetCPULoad()
 		if err != nil {
-			// Ошибка не обработана (сделать log + http.Error)
-			/*
-				Ответ пользователю: { "code": 500, "status": "internal error" }
-				Лог: детальный вывод информации. Ошибки прокидываем наверх, логируем
-			*/
-			return
+			log.Printf("HandleGetHealthcheck: GetCPULoad(): %v", err)
+			http.Error(w, "internal error:", http.StatusInternalServerError)
 		}
 		metrics := models.HostMetric{
 			CPULoad:      load,
@@ -55,16 +59,16 @@ func (h *Handler) HandleGetHealthcheck(w http.ResponseWriter, r *http.Request) {
 
 		jsonData, err := json.Marshal(metrics)
 		if err != nil {
-			http.Error(w, "ошибка формирования json", http.StatusInternalServerError)
-			return
+			log.Printf("HandleGetHealthcheck: json.Marshal(): %v", err)
+			http.Error(w, "internal error:", http.StatusInternalServerError)
 		}
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		_, err = w.Write(jsonData)
 		if err != nil {
-			http.Error(w, "ошибка формирования json", http.StatusInternalServerError)
-			return
+			log.Printf("HandleGetHealthcheck: w.Write(): %v", err)
+			http.Error(w, "internal error:", http.StatusInternalServerError)
 		}
 	}
 	fmt.Println("used handleGetHealthcheck")
@@ -76,22 +80,22 @@ func (h *Handler) HandleGetRedirect(w http.ResponseWriter, r *http.Request) {
 
 		validTargetURL, err := url.Parse(targetURL)
 		if err != nil {
+			log.Printf("HandleGetRedirect: url.Parse(targetURL) %v", err)
 			http.Error(w, "invalid link", http.StatusBadRequest)
-			return
 		}
 		http.Redirect(w, r, validTargetURL.String(), http.StatusFound)
 	}
-
+	fmt.Println("used HandleGetRedirect")
 }
 func (h *Handler) HandlePost(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("used Post")
-
+	fmt.Println("run POST")
 	if r.Method == http.MethodPost {
 		id := r.URL.Path[len("/values/"):]
 		newPost := new(models.Post)
 
 		idInt, err := strconv.Atoi(id)
 		if err != nil {
+			log.Printf("HandlePost: strconv.Atoi(id): %v", err)
 			http.Error(w, "invalid ID", http.StatusBadRequest)
 			return
 		}
@@ -100,43 +104,45 @@ func (h *Handler) HandlePost(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		err = decoder.Decode(newPost)
 		if err != nil {
-			http.Error(w, "error decoding json", http.StatusBadRequest)
-			return
+			log.Printf("HandlePost: decoder.Decode(newPost): %v", err)
+			http.Error(w, "internal error", http.StatusInternalServerError)
 		}
 
 		err = h.repo.CreatePost(*newPost)
 		if err != nil {
+			log.Printf("HandlePost: CreatePost(*newPost): %v", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
 		}
 	}
 }
 func (h *Handler) HandleGet(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("run GET")
 	if r.Method == http.MethodGet {
 		id := r.URL.Path[len("/values/"):]
 		idInt, err := strconv.Atoi(id)
 		if err != nil {
+			log.Printf("HandleGet: Atoi(): %v", err)
 			http.Error(w, "invalid ID", http.StatusBadRequest)
 			return
 		}
 
 		post, err := h.repo.GetPost(idInt)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			log.Printf("HandleGet: %v", err)
+			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
 
 		jsonData, err := json.Marshal(post.Elements)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		_, err = w.Write(jsonData)
 		if err != nil {
-			http.Error(w, "formation error json", http.StatusInternalServerError)
+			log.Printf("HandleGet: Write(jsonData): %v", err)
+			http.Error(w, "internal error", http.StatusInternalServerError)
 		}
-
-		fmt.Println("used Get")
 	}
 }

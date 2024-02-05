@@ -1,4 +1,4 @@
-package serv
+package hskills
 
 import (
 	"context"
@@ -26,7 +26,7 @@ func (s *Server) Run(ctx context.Context, port string, mux *http.ServeMux) error
 		ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
 		err := s.httpServer.Shutdown(ctx)
 		if err != nil {
-			_ = fmt.Errorf("s.httpServer.Shutdown(ctx):  %v", err)
+			_ = fmt.Errorf("Run: s.httpServer.Shutdown(ctx):  %v", err)
 			return
 		}
 	}()
