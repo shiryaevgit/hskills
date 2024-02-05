@@ -81,7 +81,7 @@ func (r *Repository) GetAllPosts() ([]models.Post, error) {
 
 	_, err := r.file.Seek(0, io.SeekStart)
 	if err != nil {
-		return nil, fmt.Errorf("GetAllPosts: %w", err)
+		fmt.Printf("GetAllPosts: %v", err)
 	}
 
 	data, err := io.ReadAll(r.file)
