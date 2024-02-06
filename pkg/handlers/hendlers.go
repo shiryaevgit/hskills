@@ -88,61 +88,57 @@ func (h *Handler) HandleGetRedirect(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("used HandleGetRedirect")
 }
 func (h *Handler) HandlePost(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("run POST")
-	if r.Method == http.MethodPost {
-		id := r.URL.Path[len("/values/"):]
-		newPost := new(models.Post)
+	id := r.URL.Path[len("/values/"):]
+	newPost := new(models.Post)
 
-		idInt, err := strconv.Atoi(id)
-		if err != nil {
-			log.Printf("HandlePost: strconv.Atoi(id): %v", err)
-			http.Error(w, "invalid ID", http.StatusBadRequest)
-			return
-		}
-		newPost.ID = idInt
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		log.Printf("HandlePost: strconv.Atoi(id): %v", err)
+		http.Error(w, "invalid ID", http.StatusBadRequest)
+		return
+	}
+	newPost.ID = idInt
 
-		decoder := json.NewDecoder(r.Body)
-		err = decoder.Decode(newPost)
-		if err != nil {
-			log.Printf("HandlePost: decoder.Decode(newPost): %v", err)
-			http.Error(w, "internal error", http.StatusInternalServerError)
-		}
+	decoder := json.NewDecoder(r.Body)
+	err = decoder.Decode(newPost)
+	if err != nil {
+		log.Printf("HandlePost: decoder.Decode(newPost): %v", err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+	}
 
-		err = h.repo.CreatePost(*newPost)
-		if err != nil {
-			log.Printf("HandlePost: CreatePost(*newPost): %v", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
-		}
+	err = h.repo.CreatePost(*newPost)
+	if err != nil {
+		log.Printf("HandlePost: CreatePost(*newPost): %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 }
+
 func (h *Handler) HandleGet(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("run GET")
-	if r.Method == http.MethodGet {
-		id := r.URL.Path[len("/values/"):]
-		idInt, err := strconv.Atoi(id)
-		if err != nil {
-			log.Printf("HandleGet: Atoi(): %v", err)
-			http.Error(w, "invalid ID", http.StatusBadRequest)
-			return
-		}
 
-		post, err := h.repo.GetPost(idInt)
-		if err != nil {
-			log.Printf("HandleGet: %v", err)
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
-		}
+	id := r.URL.Path[len("/values/"):]
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		log.Printf("HandleGet: Atoi(): %v", err)
+		http.Error(w, "invalid ID", http.StatusBadRequest)
+		return
+	}
 
-		jsonData, err := json.Marshal(post.Elements)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+	post, err := h.repo.GetPost(idInt)
+	if err != nil {
+		log.Printf("HandleGet: %v", err)
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
 
-		w.Header().Set("Content-Type", "application/json")
-		_, err = w.Write(jsonData)
-		if err != nil {
-			log.Printf("HandleGet: Write(jsonData): %v", err)
-			http.Error(w, "internal error", http.StatusInternalServerError)
-		}
+	jsonData, err := json.Marshal(post.Elements)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(jsonData)
+	if err != nil {
+		log.Printf("HandleGet: Write(jsonData): %v", err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
 	}
 }

@@ -15,14 +15,6 @@ import (
 	"os/signal"
 )
 
-/*
-Собрать приложение через комманду: (запускаю из папки task3)
-go build -o app cmd/app.g
-
-Запустить приложение через консоль:
-./app
-*/
-
 func main() {
 	pid := os.Getpid()
 	fmt.Println("Current PID:", pid)
@@ -51,9 +43,6 @@ func main() {
 
 	mux.HandleFunc("/healthcheck", handler.HandleGetHealthcheck)
 	mux.HandleFunc("/redirect", handler.HandleGetRedirect)
-	//mux.HandleFunc("/values/{id}", handler.HandlePost)
-	//mux.HandleFunc("/values/", handler.HandleGet)
-
 	mux.HandleFunc("/values/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			handler.HandlePost(w, r)
@@ -62,10 +51,6 @@ func main() {
 		}
 	})
 
-	// Здесь зарегистрировал контекст который завершится в случае получения сигнала от операционной системы
-	// Поэкспериментируй с ним и попробуй отправить разные сигналы процессу
-	// Отправить SIGTERM процессу, id процесса можно узнать в консоли через команду ps:
-	// kill -15 [pid]
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt) // Ctrl + C -> SIGINT; Есть еще SIGTERM,SIGKILL
 
 	err = srv.Run(ctx, port, mux)
