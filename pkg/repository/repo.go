@@ -20,17 +20,26 @@ type Repository struct {
 }
 
 func NewRepository(path string) (*Repository, error) {
-	openedFile, err := os.Open(path)
-	if err == nil {
-		return &Repository{file: openedFile, path: path}, nil
-	}
-
-	createFile, err := os.Create(path)
+	file, err := os.OpenFile(path, os.O_CREATE, 0666)
 	if err != nil {
 		return nil, fmt.Errorf("NewRepository: %w", err)
 	}
-	return &Repository{file: createFile, path: path}, nil
+
+	return &Repository{file: file, path: path}, nil
 }
+
+//func NewRepository(path string) (*Repository, error) {
+//	openedFile, err := os.Open(path)
+//	if err == nil {
+//		return &Repository{file: openedFile, path: path}, nil
+//	}
+//
+//	createFile, err := os.Create(path)
+//	if err != nil {
+//		return nil, fmt.Errorf("NewRepository: %w", err)
+//	}
+//	return &Repository{file: createFile, path: path}, nil
+//}
 
 func (r *Repository) CreatePost(newPost models.Post) error {
 	//r.mu.Lock()
