@@ -29,6 +29,7 @@ func main() {
 		fmt.Printf("create error.log: %v", err)
 	}
 	log.SetOutput(fileLog)
+	defer fileLog.Close()
 
 	port := env.HTTPPort
 	srv := new(serv.Server)
